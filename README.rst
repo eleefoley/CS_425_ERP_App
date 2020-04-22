@@ -1,10 +1,9 @@
-Sample Module Repository
+ERP App for CS 425
 ========================
+This project is for an Illinois Tech project for CS 425, Database Organization, taught by Ola Tannous.
 
-This simple project is an example repo for Python projects.
 
-`Learn more <http://www.kennethreitz.org/essays/repository-structure-and-python>`_.
 
 ---------------
 
-If you want to learn more about ``setup.py`` files, check out `this repository <https://github.com/kennethreitz/setup.py>`_.
+If you want to learn more about this projec, check out `this repository <https://github.com/eleefoley/CS_425_ERP_App>`_.
