@@ -1,6 +1,8 @@
 import sys
 import pandas as pd
 
+user_info = pd.read_csv("Data/unpwd.csv")
+print(user_info.columns.values)
 
 un=""
 pw = ""
