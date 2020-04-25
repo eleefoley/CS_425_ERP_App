@@ -1,11 +1,11 @@
 employeeID,FirstName,MiddleName,LastName,Salary,Salaried,Hourly,Department
 10001,Sandy,Penny,Green,50000,TRUE,FALSE,Logistics
 10002,Sherman,Ken,Yip,45000,TRUE,FALSE,Sales
-10003,Shelly,Kennedy,Kim,60000,TRUE,FALSE,Human Resources
+10003,Shelly,Kennedy,Kim,60000,TRUE,FALSE,Engineering
 10004,Sahas,Karl,Johnson,45000,TRUE,FALSE,Sales
 10005,Sudeep,Sunil,Harlow,55000,TRUE,FALSE,Sales
 10006,Sam,Amanda,Mohammad,70000,TRUE,FALSE,Information Technology
 10007,Shanda,Mary,Sampson,70000,TRUE,FALSE,Information Technology
 10008,Tim,B,Crisp,55000,TRUE,FALSE,Sales
-10009,Teo,Jose,Novak,60000,TRUE,FALSE,Human Resources
+10009,Teo,Jose,Novak,60000,TRUE,FALSE,Engineering
 10010,Tyrone,Carter,Mayfield,45000,TRUE,FALSE,Sales
