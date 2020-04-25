@@ -30,6 +30,7 @@ def main():
                            'SQL/create_login.sql']
 
         for sql_file in required_tables:
+            print('about to try ', str(sql_file))
             query = open(sql_file).read()
             cursor.execute(query)
             connection.commit()
