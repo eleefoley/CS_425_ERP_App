@@ -23,17 +23,17 @@ def login_user():
     return user_info.loc[user_info['userID'] == str(un)].values.tolist()
 
 def check_db_user(username,role,password):
-    query = '''DO
+    query = """DO
                 $do$
                 BEGIN
                    IF NOT EXISTS (
                       SELECT FROM pg_catalog.pg_user  -- SELECT list can be empty for this
-                      WHERE  usename = "''' + username + '''") THEN
+                      WHERE  usename = '""" + username + """') THEN
 
-                      CREATE user "''' + username + '''" with ''' + role + ''' LOGIN PASSWORD "''' + password + '''" ;
+                      CREATE user """ + username + """ with role """ + role + " LOGIN PASSWORD '" + password + """' ;
                    END IF;
                 END
-                $do$;'''
+                $do$;"""
 
     try:
         connection = psycopg2.connect(user = username,
@@ -41,7 +41,7 @@ def check_db_user(username,role,password):
                                       host = "127.0.0.1",
                                       port = "5432",
                                       database = "erp")
-        print("Cool, we found your username in the database you have all of the " + role + "permissions")
+        print("Cool, we found your username in the database you have all of the " + role + " permissions.")
         cursor = connection.cursor()
     except:
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
