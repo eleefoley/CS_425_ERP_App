@@ -10,7 +10,7 @@ import plotnine
 
 #my-local connection info
 un = "postgres"
-pw = "pw"
+pw = "pwd"
 db = "erp"
 
 def main():
