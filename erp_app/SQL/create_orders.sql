@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS orders (
 	);
 
 --create a sequence for the primary key of the table so we don't have to manually assign the ID and we make sure we'll create them in order
-CREATE SEQUENCE orderNumber START 100001;
-create index orderNumber_index on orders(orderNumber);
+CREATE SEQUENCE IF NOT EXISTS orderNumber START 100001;
+create index IF NOT EXISTS orderNumber_index on orders(orderNumber);

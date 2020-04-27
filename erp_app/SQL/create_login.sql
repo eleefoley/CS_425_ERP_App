@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS login (
 	);
 
 --create a sequence for the primary key of the table so we don't have to manually assign the ID and we make sure we'll create them in order
-CREATE SEQUENCE userID START 1000001;
-create index userID_index on login(userID);
+CREATE SEQUENCE IF NOT EXISTS userID START 1000001;
+create index IF NOT EXISTS userID_index on login(userID);
 
