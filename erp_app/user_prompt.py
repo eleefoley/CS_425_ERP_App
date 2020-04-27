@@ -6,21 +6,24 @@ def login_user():
     user_info = pandas.read_csv("../erp_app/Data/unpwd.csv")
 
     login = False
-    while login == False:
-        un = input("Enter your username: ")
-        print(un)
-        if un in list(user_info['userID']):
-            pw = input("Enter your password: ")
-            print(pw)
+    i = 0
+    while login == False or i >= 3:
+        username = input("Enter your username: ")
+        print(username)
+        if username in list(user_info['userID']):
+            password = input("Enter your password: ")
+            print(password)
 #             print(user_info.query('userID == "' + str(un) + '"'))
-            if user_info.loc[user_info['userID'] == str(un), 'pw'].values == pw:
+            if user_info.loc[user_info['userID'] == str(username), 'pw'].values == password:
                 login = True
     #               print(list(user_info.query('userID == "' + str(un) + '"')))
             else:
                 print('Incorrect. ')
+                i = i +1
         else:
             print("User name not found.  Try again.")
-    return user_info.loc[user_info['userID'] == str(un)].values.tolist()
+            i = i +1
+    return user_info.loc[user_info['userID'] == str(username)].values.tolist()
 
 def check_db_user(username,role,password):
     query = """DO
@@ -47,7 +50,7 @@ def check_db_user(username,role,password):
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
         try:
             connection = psycopg2.connect(user = "postgres",
-                                      password = "cs425proj",
+                                      password = "B2good#1",
                                       host = "127.0.0.1",
                                       port = "5432",
                                       database = "erp")
