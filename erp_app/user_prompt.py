@@ -7,27 +7,28 @@ def login_user():
 
     login = False
     i = 0
-    while login == False or i >= 3:
+    while login == False and i <= 3:
         username = input("Enter your username: ")
         print(username)
-        if username in list(user_info['userID']):
+        if username in list(user_info['username']):
             password = input("Enter your password: ")
             print(password)
-#             print(user_info.query('userID == "' + str(un) + '"'))
-            if user_info.loc[user_info['userID'] == str(username), 'pw'].values == password:
+#             print(user_info.query('username == "' + str(un) + '"'))
+            if user_info.loc[user_info['username'] == str(username), 'pw'].values == password:
                 login = True
-    #               print(list(user_info.query('userID == "' + str(un) + '"')))
+    #               print(list(user_info.query('username == "' + str(un) + '"')))
             else:
                 print('Incorrect. ')
                 i = i +1
         else:
             print("User name not found.  Try again.")
             i = i +1
-    return user_info.loc[user_info['userID'] == str(username)].values.tolist()
+    if login == False:
+        print("Too many incorrect tries")
+        exit()
+    return user_info.loc[user_info['username'] == str(username)].values.tolist()
 
 def login_db_user(username,role,password):
-    #Hardcoded userID will need to be changed
-    userID = 1
     query = """DO
                 $do$
                 BEGIN
@@ -47,8 +48,7 @@ def login_db_user(username,role,password):
                                       port = "5432",
                                       database = "erp")
         print("Cool, we found your username in the database you have all of the " + role + " permissions.")
-        cursor = connection.cursor()
-        create_login_table(connection)
+        #create_login_table(connection)
     except:
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
         try:
@@ -62,9 +62,24 @@ def login_db_user(username,role,password):
             print("User created")
             connection.commit()
             create_login_table(connection)
+            connection.commit()
+            cursor.close()
+            connection.closer()
+
+            connection = psycopg2.connect(user = username,
+                                      password = password,
+                                      host = "127.0.0.1",
+                                      port = "5432",
+                                      database = "erp")
+            print("Cool, we found your username in the database you have all of the " + role + " permissions.") 
+ 
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error while creating PostgreSQL table", error)
 
+    get_userID_query = """select userID from employeeLogin where userName = '""" + username +"""';"""
+    cursor = connection.cursor()
+    cursor.execute(get_userID_query)
+    userID = cursor.fetchone()
     cur2 = connection.cursor()
     login_insert = """Insert into login (userID, username, loginTime) 
                          values (""" + str(userID) + """,'""" + username + """',now());"""
@@ -78,7 +93,7 @@ def login_db_user(username,role,password):
             cur3 = connection.cursor()
             logout_update = """update login set logouttime = now() 
                                where logoutTime is null 
-                               and username = '""" + syip + """' and loginTime = (
+                               and username = '""" + username + """' and loginTime = (
 	                       select min(loginTime) from login where logoutTime is null and username = '""" + username + """'
                                );"""
 
@@ -90,7 +105,8 @@ def login_db_user(username,role,password):
 def create_login_table(connection):
 	cursor = connection.cursor()
 	query = """CREATE TABLE IF NOT EXISTS login (
-			userID int PRIMARY KEY,
+			userID int,
+			username varchar(25)
 			privelege varchar (25),
 			loginTime timestamp,
 			logoutTime timestamp
