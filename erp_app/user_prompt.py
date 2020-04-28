@@ -25,7 +25,9 @@ def login_user():
             i = i +1
     return user_info.loc[user_info['userID'] == str(username)].values.tolist()
 
-def check_db_user(username,role,password):
+def login_db_user(username,role,password):
+    #Hardcoded userID will need to be changed
+    userID = 1
     query = """DO
                 $do$
                 BEGIN
@@ -46,6 +48,7 @@ def check_db_user(username,role,password):
                                       database = "erp")
         print("Cool, we found your username in the database you have all of the " + role + " permissions.")
         cursor = connection.cursor()
+        create_login_table(connection)
     except:
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
         try:
@@ -58,14 +61,46 @@ def check_db_user(username,role,password):
             cursor.execute(query)
             print("User created")
             connection.commit()
+            create_login_table(connection)
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error while creating PostgreSQL table", error)
-    finally:
-        #closing database connection.
-            if(connection):
-                cursor.close()
-                connection.close()
-                print("PostgreSQL connection is closed")
+
+    cur2 = connection.cursor()
+    login_insert = """Insert into login (userID, username, loginTime) 
+                         values (""" + str(userID) + """,'""" + username + """',now());"""
+
+    cur2.execute(login_insert)
+    connection.commit()
+    cur2.close()
+
+    #closing database connection.
+    if(connection):
+            cur3 = connection.cursor()
+            logout_update = """update login set logouttime = now() 
+                               where logoutTime is null 
+                               and username = '""" + syip + """' and loginTime = (
+	                       select min(loginTime) from login where logoutTime is null and username = '""" + username + """'
+                               );"""
+
+            cursor.close()
+            connection.close()
+            print("PostgreSQL connection is closed")
+
+
+def create_login_table(connection):
+	cursor = connection.cursor()
+	query = """CREATE TABLE IF NOT EXISTS login (
+			userID int PRIMARY KEY,
+			privelege varchar (25),
+			loginTime timestamp,
+			logoutTime timestamp
+			);
+
+		--create a sequence for the primary key of the table so we don't have to manually assign the ID and we make sure we'll create them in order
+		CREATE SEQUENCE IF NOT EXISTS userID START 1000001;
+		create index IF NOT EXISTS userID_index on login(userID);"""
+	cursor.execute(query)
+	cursor.close()
 
 
 [results] = login_user()
@@ -73,4 +108,4 @@ username = results[0]
 role = results[1]
 password = results[2]
 
-check_db_user(username,role,password)
+login_db_user(username,role,password)
