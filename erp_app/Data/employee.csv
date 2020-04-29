@@ -1,4 +1,3 @@
-employeeID,FirstName,MiddleName,LastName,Salary,Salaried,Hourly,Department
 10001,Sandy,Penny,Green,50000,TRUE,FALSE,Engineering
 10002,Sherman,Ken,Yip,45000,TRUE,FALSE,Sales
 10003,Shelly,Kennedy,Kim,60000,TRUE,FALSE,Engineering
