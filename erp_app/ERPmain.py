@@ -117,10 +117,10 @@ def login_user():
         if username in list(user_info['username']):
             password = input("Enter your password: ")
             print(password)
-            print(user_info.query('username == "' + str(un) + '"'))
+#             print(user_info.query('username == "' + str(un) + '"'))
             if user_info.loc[user_info['username'] == str(username), 'pw'].values == password:
                 login = True
-                print(list(user_info.query('username == "' + str(un) + '"')))
+    #               print(list(user_info.query('username == "' + str(un) + '"')))
             else:
                 print('Incorrect. ')
                 i = i +1
@@ -133,7 +133,6 @@ def login_user():
     return user_info.loc[user_info['username'] == str(username)].values.tolist()
 
 def login_db_user(username,role,password):
-    print("Let's try logging you into the database")
     query = """DO
                 $do$
                 BEGIN
@@ -152,23 +151,19 @@ def login_db_user(username,role,password):
                                       port = "5432",
                                       database = "erp")
         print("Cool, we found your username in the database you have all of the " + role + " permissions.")
-        #create_login_table(connection)
+        create_login_table()
     except:
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
         try:
-            connection = psycopg2.connect(user = "postgres",
-                                      password = "B2good#1",
-                                      host = "127.0.0.1",
-                                      port = "5432",
-                                      database = "erp")
+            connection = admin_connect()
             cursor = connection.cursor()
             cursor.execute(query)
             print("User created")
             connection.commit()
-            create_login_table(connection)
+            create_login_table()
             connection.commit()
             cursor.close()
-            connection.closer()
+            connection.close()
 
             connection = psycopg2.connect(user = username,
                                       password = password,
@@ -178,48 +173,80 @@ def login_db_user(username,role,password):
             print("Cool, we found your username in the database you have all of the " + role + " permissions.") 
  
         except (Exception, psycopg2.DatabaseError) as error :
-            print ("Error while creating PostgreSQL table", error)
+            print (error)
 
-    get_userID_query = """select userID from employeeLogin where userName = '""" + username +"""';"""
-    cursor = connection.cursor()
-    cursor.execute(get_userID_query)
-    userID = cursor.fetchone()
-    cur2 = connection.cursor()
-    login_insert = """Insert into login (userID, username, loginTime) 
-                         values (""" + str(userID) + """,'""" + username + """',now());"""
-
-    cur2.execute(login_insert)
-    connection.commit()
-    cur2.close()
+    #get_userID_query = """select userID from employeeLogin where userName = '""" + username +"""';"""
+    #cursor = connection.cursor()
+    #cursor.execute(get_userID_query)
+    #userID = cursor.fetchone()
+    insert_login(username,role)
 
     #closing database connection.
     if(connection):
-            cur3 = connection.cursor()
-            logout_update = """update login set logouttime = now() 
+           print("PostgreSQL connection is closed")
+    update_logout(username)
+    return(username,role) 
+
+def create_login_table():
+	connection = admin_connect()
+	cursor = connection.cursor()
+	query = """CREATE TABLE IF NOT EXISTS login (
+			username varchar(25),
+			privelege varchar (25),
+			loginTime timestamp,
+			logoutTime timestamp
+			);
+		"""
+	cursor.execute(query)
+	cursor.close()
+
+def admin_connect():
+    try:
+        connection = psycopg2.connect(user = "postgres",
+                                      password = "B2good#1",
+                                      host = "127.0.0.1",
+                                      port = "5432",
+                                      database = "erp")
+    except (Exception, psycopg2.DatabaseError) as error :
+        print(error)
+    return connection       
+
+def insert_login(username,role):
+    try:
+        connection = admin_connect()
+        cur2 = connection.cursor() 
+        login_insert = """Insert into login (username, privelege, loginTime) 
+                         values ('""" + username + """','""" + role + """' ,now());"""
+
+
+        cur2.execute(login_insert)
+        connection.commit()
+        cur2.close()
+        print("Added a record of your login") 
+    except (Exception, psycopg2.DatabaseError) as error :
+        print(error)
+    finally:
+        if(connection):
+            connection.close()   
+
+def update_logout(username):
+    try:
+        connection = admin_connect()
+        cur3 = connection.cursor()
+        logout_update = """update login set logouttime = now() 
                                where logoutTime is null 
                                and username = '""" + username + """' and loginTime = (
 	                       select min(loginTime) from login where logoutTime is null and username = '""" + username + """'
                                );"""
 
-            cursor.close()
+        cur3.close()
+        connection.close()
+        print("Added a record of your logout")
+    except (Exception, psycopg2.DatabaseError) as error :
+        print(error)
+    finally:   
+        if(connection):
             connection.close()
-            print("PostgreSQL connection is closed")
-
-
-def create_login_table(connection):
-	cursor = connection.cursor()
-	query = """CREATE TABLE IF NOT EXISTS login (
-			userID int,
-			username varchar(25)
-			privelege varchar (25),
-			loginTime timestamp,
-			logoutTime timestamp
-			);
-		--create a sequence for the primary key of the table so we don't have to manually assign the ID and we make sure we'll create them in order
-		CREATE SEQUENCE IF NOT EXISTS userID START 1000001;
-		create index IF NOT EXISTS userID_index on login(userID);"""
-	cursor.execute(query)
-	cursor.close()
 
 
 def execute_role (username, role, password):
@@ -235,7 +262,7 @@ def execute_role (username, role, password):
 
         if role == 'engineer':
             print('''As an ''' + role + ''', you have permission to see employees,
-        and change model or inventory infromation.''')
+            and change model or inventory infromation.''')
             while i == 'y':
                 option = input('''Please enter: \n 
                 (a) to view employees \n 
@@ -333,8 +360,10 @@ def execute_role (username, role, password):
         else:
             print('Your role, ' + role + ', does not have any priveleges.')
 
+
     except (Exception, psycopg2.DatabaseError) as error :
-        print ("Error ", error)
+        print ("Error while creating PostgreSQL table", error)
+
 
 main()
 
