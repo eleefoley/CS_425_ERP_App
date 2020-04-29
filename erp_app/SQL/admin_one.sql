@@ -1,4 +1,4 @@
-select sum(orders.salevalue) as total_revenue,
+'''select sum(orders.salevalue) as total_revenue,
 employee.FirstName as emp_fname, 
 employee.LastName as emp_lname, 
 customer.FirstName as cust_fname, 
@@ -12,4 +12,4 @@ group by
 employee.FirstName, 
 employee.LastName, 
 customer.FirstName, 
-customer.LastName; 
+customer.LastName; '''

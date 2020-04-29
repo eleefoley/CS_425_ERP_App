@@ -32,12 +32,13 @@ def main():
 
 
         [results] = login_user()
+
         username = results[0]
         role = results[1]
         password = results[2]
 
         login_db_user(username,role,password)
- 
+        execute_role (username, role, password)
 
     except (Exception, psycopg2.DatabaseError) as error :
         print ("Error ", error)
@@ -105,7 +106,6 @@ def fill_tables(cursor, connection):
             i = i + 1
     print ('CSV files of data have been copied into PostgreSQL tables.')
 
-
 def login_user():
     user_info = pandas.read_csv("Data/unpwd.csv")
 
@@ -139,11 +139,10 @@ def login_db_user(username,role,password):
                    IF NOT EXISTS (
                       SELECT FROM pg_catalog.pg_user  -- SELECT list can be empty for this
                       WHERE  usename = '""" + username + """') THEN
-                      CREATE user """ + username + """ with role """ + role + " LOGIN PASSWORD '" + password + """' ;
+                      CREATE user """ + username + """ with in role """ + role + " LOGIN PASSWORD '" + password + """' ;
                    END IF;
                 END
                 $do$;"""
-
     try:
         connection = psycopg2.connect(user = username,
                                       password = password,
@@ -151,6 +150,7 @@ def login_db_user(username,role,password):
                                       port = "5432",
                                       database = "erp")
         print("Cool, we found your username in the database you have all of the " + role + " permissions.")
+        admin_connect()
         create_login_table()
     except:
         print("Okay, so you're in our records, but not in the database.  We'll add you as a user with the " + role + " permissions real quick.")
@@ -251,118 +251,269 @@ def update_logout(username):
 
 def execute_role (username, role, password):
     i = 'y'
-    try:
-        connection = psycopg2.connect(user = username,
-                                      password = password,
-                                      host = "127.0.0.1",
-                                      port = "5432",
-                                      database = "erp")
+    connection = psycopg2.connect(user = username,
+                                    password = password,
+                                    host = "127.0.0.1",
+                                    port = "5432",
+                                    database = "erp")
 
-        cursor = connection.cursor()
+    cursor = connection.cursor()
+# Engineer's prompt
+    if role == 'engineer':
+        print('''As an ''' + role + ''', you have permission to see employees,
+        and change model or inventory infromation.''')
+        while i == 'y':
+            option = input('''Please enter: \n 
+            (a) to view employees \n 
+            (b) to update model information \n 
+            (c) to update inventory information \n
+            (d) to exit \n''')
 
-        if role == 'engineer':
-            print('''As an ''' + role + ''', you have permission to see employees,
-            and change model or inventory infromation.''')
-            while i == 'y':
-                option = input('''Please enter: \n 
-                (a) to view employees \n 
-                (b) to update model information \n 
-                (c) to update inventory information \n
-                (d) to exit''')
 
-                if option == 'a':
-                    query = input('Please enter your view of employees query in SQL')
+
+            if option == 'a':
+#           engineerView
+                try: 
+                    query = input('Please enter your view of employees query in SQL (from engineerView): \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                       
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+
+            elif option == 'b':
+#           update model information                    
+                try:
+                    query = input('Please enter your update of model information in SQL\n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                       
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+
+#           update inventory
+            elif option == 'c':
+                try:
+                    query = input('Please enter your update of inventory information in SQL \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                       
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
+#           exit
+            elif option == 'd':
+                i = -1
+
+
+            else:
+                print('Invalid selection.')
+
+
+# Admin's prompt
+    elif role == 'admin':
+        print ('''As an ''' + role + ''' you have permission to all priveleges on this database, 
+        as well as access to four different analytic reports.''')
+        while i == 'y':
+            option = input('''Please enter: \n
+            (a) to enter a SQL query \n
+            (b) to access admin report #1 \n
+            (c) to access admin report #2 \n
+            (d) to access admin report #3 \n
+            (e) to access admint report #4 \n
+            (f) to exit \n''')
+
+        #   Any SQL query
+            if option == 'a':
+                try:
+                    query = input('Please enter your SQL query: \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+            # admin report #1
+            elif option == 'b':
+                try:
+                    admin_r = 'SQL/admin_one.sql'
+                    query = open(admin_r).read()
                     cursor.execute(query)
-                    connection.commit()
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option == 'b':
-                    query = input('Please enter your update of model information in SQL')
-                    i= input('Would you like to run another query? \n(Enter (y) to continue):')
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
 
-                elif option == 'c':
-                    query = input('Please enter your update of model information in SQL')
-                    i= input('Would you like to run another query? \n(Enter (y) to continue):')
-                elif option == 'd':
-                    i = -1
-                else:
-                    print('Invalid selection.')
-
-        elif role == 'admin':
-            print ('''As an ''' + role + ''' you have permission to all priveleges on this database, 
-            as well as access to four different analytic reports.''')
-            while i == 'y':
-                option = input('''Please enter: \n
-                (a) to enter a SQL query \n
-                (b) to access admin report #1 \n
-                (c) to access admin report #2 \n
-                (d) to access admin report #3 \n
-                (e) to access admint report #4 \n
-                (f) to exit ''')
-                if option == 'a':
-                    query = input('Enter a query in postgreSQL: ')
-                    cursor.execute(query)
-
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option == 'b':
-                    query = """-- •	Total revenue from sales, associated employee and customer
-                                select sum(orders.salevalue) as total_revenue,
-                                employee.FirstName as emp_fname, 
-                                employee.LastName as emp_lname, 
-                                customer.FirstName as cust_fname, 
-                                customer.LastName as cust_lname 
-                                from orders 
-                                left join employee
-	                                on orders.employeeId = employee.employeeId 
-                                left join customer 
-	                                on orders.customerId = customer.customerId
-                                group by
-                                employee.FirstName, 
-                                employee.LastName, 
-                                customer.FirstName, 
-                                customer.LastName; """
-                    cursor.execute(query)
+        #     admin report #2
+            elif option == 'c':
+                try:
+                    admin_r = 'SQL/admin_two.sql'
+                    query = open(admin_r).read()
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
 
 
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option == 'c':
-                    #admin report 2
-
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option =='d':
-                    query = """select 
-                        orders.ordernumber as order_no,
-                        model.modelNumber as model_no,
-                        inventory.amount as avail_inv
-                        from orders
-                        left join model
-	                        on orders.modelnumber = model.modelnumber
-                        left join inventory 
-	                        on model.inventoryid = inventory.inventoryid;"""
-                    cursor.execute(query)
+        #     admin report #3
+            elif option =='d':
+                try:
+                    admin_r = 'SQL/admin_three.sql'
+                    query = open(admin_r).read()
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
 
 
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option =='e':
-                    #admin report 4
+        #      admin report #1
+            elif option =='e':
+                try:
+                    admin_r = 'SQL/admin_four.sql'
+                    query = open(admin_r).read()
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
 
-                    i = input ('Would you like to run another query? \n(Enter (y) to continue): ')
-                elif option =='f':
-                    i= -1
-                else:
-                    print('Invalid selection.')
+        #        exit
+            elif option =='f':
+                i= -1
+
+            else:
+                print('Invalid selection.')
+
+# Hr prompt
+    elif role == 'hr':
+        print ('''As an ''' +role+ ''' you have permissions to update employee records,
+        and view which employ sold any order.''')
+        while i == 'y':
+            option = input('''Please enter: \n
+            (a) to update an employee's information \n
+            (b) to view order history for all employees \n
+            (c) to view oder history for a particular employee or order \n
+            (d) to exit \n''')
+
+        #       update employee
+            if option == 'a':
+                try:
+                    query = input('Please enter your update on employee information in SQL: \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n') 
+                
+        #     hrview - all
+            elif option == 'b':
+                try:
+                    query = 'select * from hrView'
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+        #      hrview - specific
+            elif option == 'c':
+                try:
+                    query = input('Please enter your query on order history in SQL (from hrview): \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n') 
+
+        #     exit
+            elif option == 'd':
+                i= -1
+
+            else:
+                print('Invalid selection')
+# Sales prompt
+    elif role == 'sales':
+        print('''As ''' +role+ ''' you have permission to view customer information,
+        update customer information, and insert new orders.''')
+        while i == 'y':
+            option = input('''Please enter: \n
+            (a) to view customer information \n
+            (b) to view a specific customer's information \n
+            (c) to update customer information \n
+            (d) to insert a row into orders \n
+            (e) to exit \n''')
+
+        #     salview - all
+            if option == 'a':
+                try:
+                    query = 'select * from salview'
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+        #    salview - specific
+            elif option == 'b':
+                try:
+                    query = input('Please enter your view query on customers in SQL (from salview): \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+        #     update customer
+            elif option == 'c':
+                try:
+                    query = input('Please enter your update on customer information in SQL: \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+        #     insert into orders
+            elif option == 'd':
+                try:
+                    query = input('Please enter your SQL query to insert a row into orders: \n')
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+        #    exit
+            elif option == 'e':
+                i = -1
+
+            else:
+                print ('Invalid selection.')
+    else:
+        print('Your role, ' + role + ', does not have any priveleges.')
 
 
-        elif role == 'hr':
-            print('hello')
-
-        elif role == 'sales':
-            print('hello')
-        else:
-            print('Your role, ' + role + ', does not have any priveleges.')
-
-
-    except (Exception, psycopg2.DatabaseError) as error :
-        print ("Error while creating PostgreSQL table", error)
 
 
 main()

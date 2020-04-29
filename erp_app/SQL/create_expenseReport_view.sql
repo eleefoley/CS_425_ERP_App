@@ -9,4 +9,4 @@ create or replace view expenseReport as (
 		salary as cost,
 		'salary' as cost_type
 	from employee
-)
+) 
