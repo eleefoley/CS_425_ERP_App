@@ -78,7 +78,8 @@ def create_tables(cursor, connection):
 # create_roles(cursor,connection) creates any roles that do not already exist in PostgreSQL
 def create_roles(cursor, connection):
     required_roles = ['SQL/create_sales.sql','SQL/create_admin.sql',
-                        'SQL/create_engineer.sql','SQL/create_hr.sql']
+                        'SQL/create_engineer.sql','SQL/create_hr.sql'
+                        ]
     for sql_roles in required_roles:
         query = open(sql_roles).read()
         cursor.execute(query)
@@ -277,6 +278,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your view of employees query in SQL (from engineerView): \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                        
                 except(Exception, psycopg2.DatabaseError) as error :
@@ -291,6 +293,7 @@ def execute_role (username, role, password):
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
                     print(ex)
+                    ex = pandas.DataFrame(ex)
                        
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -303,6 +306,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your update of inventory information in SQL \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                        
                 except(Exception, psycopg2.DatabaseError) as error :
@@ -336,6 +340,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your SQL query: \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -348,6 +353,7 @@ def execute_role (username, role, password):
                     query = open(admin_r).read()
                     cursor.execute(query)
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -360,6 +366,7 @@ def execute_role (username, role, password):
                     query = open(admin_r).read()
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -373,6 +380,7 @@ def execute_role (username, role, password):
                     query = open(admin_r).read()
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -386,6 +394,7 @@ def execute_role (username, role, password):
                     query = open(admin_r).read()
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -415,6 +424,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your update on employee information in SQL: \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -426,6 +436,7 @@ def execute_role (username, role, password):
                     query = 'select * from hrView'
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -437,6 +448,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your query on order history in SQL (from hrview): \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -466,6 +478,7 @@ def execute_role (username, role, password):
                     query = 'select * from salview'
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -477,6 +490,7 @@ def execute_role (username, role, password):
                     query = input('Please enter your view query on customers in SQL (from salview): \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
@@ -488,17 +502,21 @@ def execute_role (username, role, password):
                     query = input('Please enter your update on customer information in SQL: \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
                 i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
 
         #     insert into orders
+    except (Exception, psycopg2.DatabaseError) as error :
+        print ("Error ", error)
             elif option == 'd':
                 try:
                     query = input('Please enter your SQL query to insert a row into orders: \n')
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
                     print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
