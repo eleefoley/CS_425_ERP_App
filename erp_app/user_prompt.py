@@ -146,7 +146,20 @@ def update_logout(username):
         if(connection):
             connection.close()   
 
-
+def sales_prompt(connection):
+    done = False
+    while(done == False):
+        print("""Enter the number for hich of the following would you like to do:
+            1. Record an order
+            2. Look up an order
+            3. View all orders
+            4. Quit this application   """
+        response = input()
+        if(resposnse == 4 or response == "Q" or response == "q"):
+            print(goodbye)
+            exit()
+        else if(response == 2):
+            print("Look up an order.  This doesn't exist yet") 
             
 [results] = login_user()
 username = results[0]
