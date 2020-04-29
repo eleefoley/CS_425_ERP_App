@@ -117,10 +117,10 @@ def login_user():
         if username in list(user_info['username']):
             password = input("Enter your password: ")
             print(password)
-#             print(user_info.query('username == "' + str(un) + '"'))
+            print(user_info.query('username == "' + str(un) + '"'))
             if user_info.loc[user_info['username'] == str(username), 'pw'].values == password:
                 login = True
-    #               print(list(user_info.query('username == "' + str(un) + '"')))
+                print(list(user_info.query('username == "' + str(un) + '"')))
             else:
                 print('Incorrect. ')
                 i = i +1
@@ -133,6 +133,7 @@ def login_user():
     return user_info.loc[user_info['username'] == str(username)].values.tolist()
 
 def login_db_user(username,role,password):
+    print("Let's try logging you into the database")
     query = """DO
                 $do$
                 BEGIN
@@ -332,6 +333,8 @@ def execute_role (username, role, password):
         else:
             print('Your role, ' + role + ', does not have any priveleges.')
 
+    except (Exception, psycopg2.DatabaseError) as error :
+        print ("Error ", error)
 
 main()
 
