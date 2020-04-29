@@ -269,63 +269,41 @@ def execute_role (username, role, password):
             (b) to update model information \n 
             (c) to update inventory information \n
             (d) to exit \n''')
-
-
-
-            if option == 'a':
 #           engineerView
-                try: 
-                    query = input('Please enter your view of employees query in SQL (from engineerView): \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                       
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
-
+            query = '-1'
+            if option == 'a':
+                query = input('Please enter your view of employees query in SQL (from engineerView): \n')
 
             elif option == 'b':
 #           update model information                    
-                try:
-                    query = input('Please enter your update of model information in SQL\n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    print(ex)
-                    ex = pandas.DataFrame(ex)
-                       
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
-
+                query = input('Please enter your update of model information in SQL\n')
 
 #           update inventory
             elif option == 'c':
-                try:
-                    query = input('Please enter your update of inventory information in SQL \n')
+                query = input('Please enter your update of inventory information in SQL \n')
+
+#           exit
+            elif option == 'd':
+                i = -1
+            else:
+                print('Invalid selection.')
+            if query != '-1':
+#   Run query
+                try: 
                     cursor.execute(str(query))
                     ex = cursor.fetchall()
                     ex = pandas.DataFrame(ex)
                     print(ex)
-                       
                 except(Exception, psycopg2.DatabaseError) as error :
                     print('Error: ' +error+ ',...')
                 i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
-#           exit
-            elif option == 'd':
-                i = -1
-
-
-            else:
-                print('Invalid selection.')
-
-
+            
 # Admin's prompt
     elif role == 'admin':
         print ('''As an ''' + role + ''' you have permission to all priveleges on this database, 
         as well as access to four different analytic reports.''')
         while i == 'y':
+            query = '-1'
             option = input('''Please enter: \n
             (a) to enter a SQL query \n
             (b) to access admin report #1 \n
@@ -336,69 +314,29 @@ def execute_role (username, role, password):
 
         #   Any SQL query
             if option == 'a':
-                try:
-                    query = input('Please enter your SQL query: \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = input('Please enter your SQL query: \n')
 
             # admin report #1
             elif option == 'b':
-                try:
-                    admin_r = 'SQL/admin_one.sql'
-                    query = open(admin_r).read()
-                    cursor.execute(query)
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                admin_r = 'SQL/admin_one.sql'
+                query = open(admin_r).read()
 
         #     admin report #2
             elif option == 'c':
-                try:
-                    admin_r = 'SQL/admin_two.sql'
-                    query = open(admin_r).read()
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                admin_r = 'SQL/admin_two.sql'
+                query = open(admin_r).read()
 
 
         #     admin report #3
             elif option =='d':
-                try:
-                    admin_r = 'SQL/admin_three.sql'
-                    query = open(admin_r).read()
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                admin_r = 'SQL/admin_three.sql'
+                query = open(admin_r).read()
 
 
         #      admin report #1
             elif option =='e':
-                try:
-                    admin_r = 'SQL/admin_four.sql'
-                    query = open(admin_r).read()
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                admin_r = 'SQL/admin_four.sql'
+                query = open(admin_r).read()
 
         #        exit
             elif option =='f':
@@ -407,11 +345,23 @@ def execute_role (username, role, password):
             else:
                 print('Invalid selection.')
 
+            if query != '-1':
+#   Run query
+                try: 
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
+
 # Hr prompt
     elif role == 'hr':
         print ('''As an ''' +role+ ''' you have permissions to update employee records,
         and view which employ sold any order.''')
         while i == 'y':
+            query = '-1'
             option = input('''Please enter: \n
             (a) to update an employee's information \n
             (b) to view order history for all employees \n
@@ -420,39 +370,17 @@ def execute_role (username, role, password):
 
         #       update employee
             if option == 'a':
-                try:
-                    query = input('Please enter your update on employee information in SQL: \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n') 
+                query = input('Please enter your update on employee information in SQL: \n')
+
                 
         #     hrview - all
             elif option == 'b':
-                try:
-                    query = 'select * from hrView'
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = 'select * from hrView'
+
 
         #      hrview - specific
             elif option == 'c':
-                try:
-                    query = input('Please enter your query on order history in SQL (from hrview): \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n') 
+                query = input('Please enter your query on order history in SQL (from hrview): \n') 
 
         #     exit
             elif option == 'd':
@@ -460,11 +388,25 @@ def execute_role (username, role, password):
 
             else:
                 print('Invalid selection')
+
+            if query != '-1':
+#   Run query
+                try: 
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+
 # Sales prompt
     elif role == 'sales':
         print('''As ''' +role+ ''' you have permission to view customer information,
         update customer information, and insert new orders.''')
         while i == 'y':
+            query = '-1'
             option = input('''Please enter: \n
             (a) to view customer information \n
             (b) to view a specific customer's information \n
@@ -474,53 +416,23 @@ def execute_role (username, role, password):
 
         #     salview - all
             if option == 'a':
-                try:
-                    query = 'select * from salview'
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = 'select * from salview'
+
 
         #    salview - specific
             elif option == 'b':
-                try:
-                    query = input('Please enter your view query on customers in SQL (from salview): \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = input('Please enter your view query on customers in SQL (from salview): \n')
+
 
         #     update customer
             elif option == 'c':
-                try:
-                    query = input('Please enter your update on customer information in SQL: \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = input('Please enter your update on customer information in SQL: \n')
+
 
         #     insert into orders
-    except (Exception, psycopg2.DatabaseError) as error :
-        print ("Error ", error)
             elif option == 'd':
-                try:
-                    query = input('Please enter your SQL query to insert a row into orders: \n')
-                    cursor.execute(str(query))
-                    ex = cursor.fetchall()
-                    ex = pandas.DataFrame(ex)
-                    print(ex)
-                except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                i = input ('Would you like to run another query? \n(Enter (y) to continue): \n')
+                query = input('Please enter your SQL query to insert a row into orders: \n')
+
 
         #    exit
             elif option == 'e':
@@ -528,6 +440,20 @@ def execute_role (username, role, password):
 
             else:
                 print ('Invalid selection.')
+
+            if query != '-1':
+#   Run query
+                try: 
+                    cursor.execute(str(query))
+                    ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' +error+ ',...')
+                i= input('Would you like to run another query? \n(Enter (y) to continue): \n')
+
+
+
     else:
         print('Your role, ' + role + ', does not have any priveleges.')
 
