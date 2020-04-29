@@ -1,0 +1,1 @@
+SELECT * FROM customerModel ORDER BY total_number_ordered DESC;
