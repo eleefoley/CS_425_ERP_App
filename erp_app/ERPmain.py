@@ -5,17 +5,13 @@ import pandas
 import psycopg2
 from psycopg2 import Error
 
-#for making data visualizations for the reports
-import plotnine
 
-#my-local connection info
-un = "postgres"
-pw = "B2good#1"
-db = "erp"
 
 def main():
 
+
     try:
+        un,pw,db = ask_for_connection_info()
         connection = psycopg2.connect(user = un,
                                       password = pw,
                                       host = "127.0.0.1",
@@ -49,10 +45,27 @@ def main():
                 cursor.close()
                 connection.close()
                 print("PostgreSQL connection is closed")
+    print("""Thanks for accessing and interacting with Database ERP for
+    Illinois Tech project for CS 425, Database Organization, taught by Ola Tannous.
+    This project was completed by Emma Foley and Nicholas Elson""")
 
-
-
-
+def ask_for_connection_info():
+    option = input("""Would you like to provide connection information for a local posgres database or use what is included in the origincal project: 
+                   (a) local info
+                   (b) info from the original project""")
+    done = False
+    while(done==False):
+        if(option =='a'):
+            db = input("Please type in the name of the database: ")
+            un = input("Please type in the username, with correct casing: ")
+            pw = input("Please type in the password, with correct casing: ")
+            done = True
+        elif(option =='b'):
+            un = "postgres"
+            pw = "B2good#1"
+            db = "erp"
+            done = True
+    return un,pw,db
 
 
 
@@ -196,23 +209,25 @@ def grant_user_roles(username,role,password):
                 $do$
                 BEGIN
                 
-                        grant select on engineerView to engineer;
-                        grant update on model to engineer;
-                        grant update on inventory to engineer;
-                        grant select on inventory to engineer;
+                    
+                    
+                    grant select on engineerView to engineer;
+                    grant update,select on model to engineer;
+                    grant update,select on inventory to engineer;
               
                 END
                 $do$;"""
+
+
     if role == 'admin':
         query = """DO
         $do$
         BEGIN
-                
-                grant select on expenseReport to admin;
-                grant select on customerModel to admin;
-                grant all privileges on database erp to admin;
-                grant all privileges on all tables in schema public to admin;
-                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO admin;
+            grant all privileges on database erp to admin;
+            grant all privileges on all tables in schema public to admin;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO admin;
+            grant select on expenseReport to admin;
+            grant select on customerModel to admin;
               
         END
         $do$;"""
@@ -221,8 +236,9 @@ def grant_user_roles(username,role,password):
                 $do$
                 BEGIN
                 
-                    grant update on employee to hr;
+                    grant update,select on employee to hr;
                     grant select on hrView to hr;
+                    grant select on orders to hr;
               
                 END
                 $do$;"""
@@ -232,8 +248,8 @@ def grant_user_roles(username,role,password):
                 BEGIN
                 
                     GRANT select on salview TO sales;
-                    GRANT UPDATE ON customer to sales;
-                    grant insert on orders to sales;
+                    GRANT update,select ON customer to sales;
+                    grant insert, select on orders to sales;
               
                 END
                 $do$;"""
@@ -305,6 +321,8 @@ def update_logout(username):
         if(connection):
             connection.close()
 
+
+
 def prompt_for_inventory_update(connection):
     done = False
     print("Update a field in Inventory for a specific inventory number")
@@ -349,6 +367,268 @@ def prompt_for_inventory_update(connection):
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error ", error)
 
+def prompt_for_model_update(connection):
+    table = "model"
+    primary_key = "modelnumber"
+    done = False
+    print("Update a field in " + table + " for a specific" + primary_key)
+    while(done==False):
+        response = input("""Which of the following fields would you like to update:
+                         (a) salePrice
+                         or
+                         (b) Exit this prompt without updating
+                         """)
+        if(response=='b'):
+            done = True
+        elif(response=='a'):
+            field = "salePrice"
+        new_value = input("Type the desired value: ")
+        pk = input("Type the " + primary_key + " of the item you would like to update: ")
+
+        query = "update " + table +" set " + str(field) + " = '" + str(new_value) + "' where " + primary_key + " = " + str(pk) + ";" 
+        print(query)
+        done = True
+        see_result_query = "select * from " + table + " where " + primary_key + " = " + str(pk) + ";"
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("Update complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
+
+def prompt_for_sales_customer_view(connection):
+    done = False
+    print("View customer's information.")
+    while(done==False):
+        response = input("""How will you be searching for your customer:
+                         (a) By first name
+                         (b) By last name
+                         (c) By customerID
+                         or
+                         (d) Exit this prompt without viewing
+                         """)
+        if(response=='d'):
+            done = True
+        elif(response=='a'):
+            field = "upper(firstname)"
+            new_value = input("Type the desired first name: ")
+            new_value = "upper('" + new_value + "')"
+        elif(response=='b'):
+            field = "upper(lastname)"
+            new_value = input("Type the desired last name: ")
+            new_value = "upper('" + new_value + "')"
+        elif(response=='c'):
+            field = "customerid"
+            new_value = input("Type the desired id: ")
+
+        query = """select * from customer where """ + str(field) + """ = """ + str(new_value) + """;""" 
+#         print(query)
+        done = True
+        see_result_query = """select * from customer where """ + str(field) + """ = """ + str(new_value) + """;"""
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("View complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
+
+def prompt_for_customer_update(connection):
+    done = False
+    print("Update a field in customer for a specific inventory number")
+    while(done==False):
+        response = input("""Which of the following fields would you like to update:
+                         (a) first name
+                         (b) last name
+                         or
+                         (c) Exit this prompt without updating
+                         """)
+        if(response=='c'):
+            done = True
+        elif(response=='a'):
+            field = "firstname"
+        elif(response=='b'):
+            field = "lastname"
+
+        new_value = input("Type the desired name: ")
+        pk = input("Type the customer ID of the person you would like to update: ")
+
+        query = """update customer set """ + str(field) + """ = '""" + str(new_value) + """' where customerid = """ + str(pk) + """;""" 
+#         print(query)
+        done = True
+        see_result_query = "select * from customer where customerid = " + str(pk) + ";"
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("Update complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
+
+
+def prompt_for_orders_insert(connection):
+    done = False
+    print("Enter a new order:")
+    ordernum = input("Enter an order Number: ")
+    customerId = input("Enter a customer ID: ")
+    empId = input("Enter an employee's ID: ")
+    modNum = input("Enter a model number: ")
+    sale = input("Enter a sale value: ")
+
+    query = "insert into orders (ordernumber, customerid, employeeid, modelnumber, salevalue) VALUES ('"+ str(ordernum) + "','"+str(customerId)+"','"+str(empId)+"','"+str(modNum)+"','"+str(sale)+"');" 
+#         print(query)
+    done = True
+    see_result_query = "select * from orders where ordernumber = " + str(ordernum) + ";"
+    try:
+        cursor = connection.cursor()
+        connection.commit()
+        cursor.execute(query)
+        print("Update complete")
+        connection.commit()    
+        print("Commited update")
+        cursor.execute(see_result_query)
+        row = cursor.fetchall()
+        row = pandas.DataFrame(row)
+        print(row)
+        cursor.close()
+    except (Exception, psycopg2.DatabaseError) as error :
+        print ("Error ", error)
+
+
+def prompt_for_hr_orderhistory_view(connection):
+    done = False
+    print("View order's information.")
+    while(done==False):
+        response = input("""How will you be searching for your order:
+                         (a) Order Number
+                         (b) Customer ID
+                         (c) Employee ID
+                         (d) Model Number
+                         (e) Sale value
+                         or
+                         (f) Exit this prompt without viewing
+                         """)
+        if(response=='f'):
+            done = True
+        elif(response=='a'):
+            field = "ordernumber"
+            new_value = input("Type the desired ordernumber: ")
+        elif(response=='b'):
+            field = "customerid"
+            new_value = input("Type the desired customerid: ")
+        elif(response=='c'):
+            field = "employeeid"
+            new_value = input("Type the desired employee id: ")
+        elif(response=='d'):
+            field = "modelnumber"
+            new_value = input("Type the desired modelnumber: ")
+        elif(response=='e'):
+            field = "salevalue"
+            new_value = input("Type the desired sale value: ")
+
+        query = """select * from orders where """ + str(field) + """ = """ + str(new_value) + """;""" 
+#         print(query)
+        done = True
+        see_result_query = """select * from orders where """ + str(field) + """ = """ + str(new_value) + """;"""
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("View complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
+
+def prompt_for_employee_update(connection):
+    table = "employee"
+    primary_key = "employeeid"
+    done = False
+    print("Update a field in " + table + " for a specific" + primary_key)
+    while(done==False):
+            response = input("""Which of the following fields would you like to update:
+                             (a) firstName
+                             (b) middleName
+                             (c) lastName
+                             (d) salary (numbers only, no commas or dollar signs)
+                             (e) salaried (true/false)
+                             (f) hourly (true/false)
+                             (g) department
+                             or
+                             (h) Exit this prompt without updating
+                             """)
+            if(response=='h'):
+                done = True
+            elif(response=='a'):
+                field = "firstName"
+            elif(response=='b'):
+                field = "middleName"
+            elif(response=='c'):
+                field = "lastName"
+            elif(response == 'd'):
+                field = "salary"
+            elif(response=='e'):
+                field = "salaried"
+            elif(response=='f'):
+                field = "hourly"
+            elif(response == 'g'):
+                field = "department"
+            new_value = input("Type the desired value: ")
+            pk = input("Type the " + primary_key + " of the item you would like to update: ")
+
+            query = "update " + table +" set " + str(field) + " = '" + str(new_value) + "' where " + primary_key + " = " + str(pk) + ";" 
+            print(query)
+            done = True
+            see_result_query = "select * from " + table + " where " + primary_key + " = " + str(pk) + ";"
+            try:
+                cursor = connection.cursor()
+                connection.commit()
+                cursor.execute(query)
+                print("Update complete")
+                connection.commit()    
+                print("Commited update")
+                cursor.execute(see_result_query)
+                row = cursor.fetchall()
+                row = pandas.DataFrame(row)
+                print(row)
+                cursor.close()
+            except (Exception, psycopg2.DatabaseError) as error :
+                print ("Error ", error)
+
+
+
+
+
+
+
+
 
 def execute_role (username, role, password):
     i = 'y'
@@ -376,18 +656,16 @@ def execute_role (username, role, password):
 
             elif option == 'b':
 #           update model information                    
-                query = input('Please enter your update of model information in SQL\n')
-
-#           update inventory
-            elif option == 'c':
-                query = input('Please enter your update of inventory information in SQL \n')
+                prompt_for_model_update(connection)
+                i = 'y'
 
 #           update through prompt
-            elif option == 'd':
+            elif option == 'c':
                 prompt_for_inventory_update(connection)
+                i = 'y'
+            elif option == 'd':
                 i = -1
-            elif option == 'e':
-                i = -1
+            else:
                 print('Invalid selection.')
             if query != '-1':
 #   Run query
@@ -408,15 +686,25 @@ def execute_role (username, role, password):
             query = '-1'
             option = input('''Please enter: \n
             (a) to enter a SQL query \n
-            (b) to access admin report #1 \n
-            (c) to access admin report #2 \n
-            (d) to access admin report #3 \n
-            (e) to access admint report #4 \n
+            (b) to access admin report #1: Total revenue from sales, associated employee and customer \n
+            (c) to access admin report #2: Customer model bought and quantity to make prediction and understand trending \n
+            (d) to access admin report #3: For each order, the associated parts and available inventory\n
+            (e) to access admint report #4: Expense report, employee showing salary, bonus expense and part cost \n
             (f) to exit \n''')
 
         #   Any SQL query
             if option == 'a':
                 query = input('Please enter your SQL query: \n')
+                try: 
+                    cursor.execute(str(query))
+                    connection.commit()
+                    ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
+                    print(ex)
+                except(Exception, psycopg2.DatabaseError) as error :
+                    print('Error: ' + str(error) + ',...')
+                query = '-1'
+                
 
             # admin report #1
             elif option == 'b':
@@ -472,9 +760,9 @@ def execute_role (username, role, password):
 
         #       update employee
             if option == 'a':
-                query = input('Please enter your update on employee information in SQL: \n')
+                prompt_for_employee_update(connection)
+                i = 'y'
 
-                
         #     hrview - all
             elif option == 'b':
                 query = 'select * from hrView'
@@ -482,7 +770,8 @@ def execute_role (username, role, password):
 
         #      hrview - specific
             elif option == 'c':
-                query = input('Please enter your query on order history in SQL (from hrview): \n') 
+                prompt_for_hr_orderhistory_view(connection)
+                i='y'
 
         #     exit
             elif option == 'd':
@@ -523,17 +812,20 @@ def execute_role (username, role, password):
 
         #    salview - specific
             elif option == 'b':
-                query = input('Please enter your view query on customers in SQL (from salview): \n')
+                prompt_for_sales_customer_view(connection)
+                i = 'y'
 
 
         #     update customer
             elif option == 'c':
-                query = input('Please enter your update on customer information in SQL: \n')
+                prompt_for_customer_update(connection)
+                i = 'y'
 
 
         #     insert into orders
             elif option == 'd':
-                query = input('Please enter your SQL query to insert a row into orders: \n')
+                prompt_for_orders_insert(connection)
+                i = 'y'
 
 
         #    exit
