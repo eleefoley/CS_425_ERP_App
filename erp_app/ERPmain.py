@@ -306,6 +306,61 @@ def update_logout(username):
         if(connection):
             connection.close()
 
+def prompt_for_employee_update(connection):
+    table = "employee"
+    primary_key = "employeeid"
+    done = False
+    print("Update a field in " + table + " for a specific" + primary_key)
+    while(done==False):
+            response = input("""Which of the following fields would you like to update:
+                             (a) firstName
+                             (b) middleName
+                             (c) lastName
+                             (d) salary (numbers only, no commas or dollar signs)
+                             (e) salaried (true/false)
+                             (f) hourly (true/false)
+                             (g) department
+                             or
+                             (h) Exit this prompt without updating
+                             """)
+            if(response=='h'):
+                done = True
+            elif(response=='a'):
+                field = "firstName"
+            elif(response=='b'):
+                field = "middleName"
+            elif(response=='c'):
+                field = "lastName"
+            elif(response == 'd'):
+                field = "salary"
+            elif(response=='e'):
+                field = "salaried"
+            elif(response=='f'):
+                field = "hourly"
+            elif(response == 'g'):
+                field = "department"
+            new_value = input("Type the desired value: ")
+            pk = input("Type the " + primary_key + " of the item you would like to update: ")
+
+            query = "update " + table +" set " + str(field) + " = '" + str(new_value) + "' where " + primary_key + " = " + str(pk) + ";" 
+            print(query)
+            done = True
+            see_result_query = "select * from " + table + " where " + primary_key + " = " + str(pk) + ";"
+            try:
+                cursor = connection.cursor()
+                connection.commit()
+                cursor.execute(query)
+                print("Update complete")
+                connection.commit()    
+                print("Commited update")
+                cursor.execute(see_result_query)
+                row = cursor.fetchall()
+                row = pandas.DataFrame(row)
+                print(row)
+                cursor.close()
+            except (Exception, psycopg2.DatabaseError) as error :
+                print ("Error ", error)
+
 def prompt_for_inventory_update(connection):
     done = False
     print("Update a field in Inventory for a specific inventory number")
