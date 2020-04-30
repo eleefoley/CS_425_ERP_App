@@ -197,6 +197,7 @@ def grant_user_roles(username,role,password):
                 BEGIN
                 
                         grant select on engineerView to engineer;
+                        grant select on model to engineer;
                         grant update on model to engineer;
                         grant update on inventory to engineer;
                         grant select on inventory to engineer;
@@ -349,6 +350,42 @@ def prompt_for_inventory_update(connection):
         except (Exception, psycopg2.DatabaseError) as error :
             print ("Error ", error)
 
+def prompt_for_model_update(connection):
+    table = "model"
+    primary_key = "modelnumber"
+    done = False
+    print("Update a field in " + table + " for a specific" + primary_key)
+    while(done==False):
+        response = input("""Which of the following fields would you like to update:
+                         (a) salePrice
+                         or
+                         (b) Exit this prompt without updating
+                         """)
+        if(response=='b'):
+            done = True
+        elif(response=='a'):
+            field = "salePrice"
+        new_value = input("Type the desired value: ")
+        pk = input("Type the " + primary_key + " of the item you would like to update: ")
+
+        query = "update " + table +" set " + str(field) + " = '" + str(new_value) + "' where " + primary_key + " = " + str(pk) + ";" 
+        print(query)
+        done = True
+        see_result_query = "select * from " + table + " where " + primary_key + " = " + str(pk) + ";"
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("Update complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
 
 def execute_role (username, role, password):
     i = 'y'
@@ -376,17 +413,18 @@ def execute_role (username, role, password):
 
             elif option == 'b':
 #           update model information                    
-                query = input('Please enter your update of model information in SQL\n')
+                prompt_for_model_update(connection)
+                i = -1
 
 #           update inventory
-            elif option == 'c':
-                query = input('Please enter your update of inventory information in SQL \n')
+            #elif option == 'c':
+            #    query = input('Please enter your update of inventory information in SQL \n')
 
-#           update through prompt
-            elif option == 'd':
+#           update inventory through prompt
+            elif option == 'c':
                 prompt_for_inventory_update(connection)
                 i = -1
-            elif option == 'e':
+            elif option == 'd':
                 i = -1
                 print('Invalid selection.')
             if query != '-1':
