@@ -24,7 +24,6 @@ def main():
 
         cursor = connection.cursor()
         print ('Connection to PostgreSQL secure')
- 
         create_tables(cursor, connection)
         create_roles(cursor, connection)
         fill_tables (cursor, connection)
@@ -38,6 +37,7 @@ def main():
         password = results[2]
 
         login_db_user(username,role,password)
+        grant_user_roles(username,role,password)
         execute_role (username, role, password)
 
     except (Exception, psycopg2.DatabaseError) as error :
@@ -188,6 +188,62 @@ def login_db_user(username,role,password):
     update_logout(username)
     return(username,role) 
 
+def grant_user_roles(username,role,password):
+    connection = admin_connect()
+    cursor = connection.cursor()
+    if role == 'engineer':
+        query = """DO
+                $do$
+                BEGIN
+                
+                        grant select on engineerView to engineer;
+                        grant update on model to engineer;
+                        grant update on inventory to engineer;
+                        grant select on inventory to engineer;
+              
+                END
+                $do$;"""
+    if role == 'admin':
+        query = """DO
+        $do$
+        BEGIN
+                
+                grant select on expenseReport to admin;
+                grant select on customerModel to admin;
+                grant all privileges on database erp to admin;
+                grant all privileges on all tables in schema public to admin;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO admin;
+              
+        END
+        $do$;"""
+    if role == 'hr':
+                query = """DO
+                $do$
+                BEGIN
+                
+                    grant update on employee to hr;
+                    grant select on hrView to hr;
+              
+                END
+                $do$;"""
+    if role == 'sales':
+                query = """DO
+                $do$
+                BEGIN
+                
+                    GRANT select on salview TO sales;
+                    GRANT UPDATE ON customer to sales;
+                    grant insert on orders to sales;
+              
+                END
+                $do$;"""
+
+    cursor.execute(query)
+    connection.commit()
+
+    
+
+
 def create_login_table():
 	connection = admin_connect()
 	cursor = connection.cursor()
@@ -249,6 +305,50 @@ def update_logout(username):
         if(connection):
             connection.close()
 
+def prompt_for_inventory_update(connection):
+    done = False
+    print("Update a field in Inventory for a specific inventory number")
+    while(done==False):
+        response = input("""Which of the following fields would you like to update:
+                         (a) Cost
+                         (b) LeadTime
+                         (c) CategoryType
+                         (d) Amount
+                         or
+                         (e) Exit this prompt without updating
+                         """)
+        if(response=='e'):
+            done = True
+        elif(response=='a'):
+            field = "cost"
+        elif(response=='b'):
+            field = "LeadTime"
+        elif(response=='c'):
+            field = "CategoryType"
+        elif(response == 'd'):
+            field = "Amount"
+        new_value = input("Type the desired value: ")
+        pk = input("Type the inventory ID of the item you would like to update: ")
+
+        query = """update inventory set """ + str(field) + """ = '""" + str(new_value) + """' where inventoryid = """ + str(pk) + """;""" 
+#         print(query)
+        done = True
+        see_result_query = "select * from inventory where inventoryid = " + str(pk) + ";"
+        try:
+            cursor = connection.cursor()
+            connection.commit()
+            cursor.execute(query)
+            print("Update complete")
+            connection.commit()    
+            print("Commited update")
+            cursor.execute(see_result_query)
+            row = cursor.fetchall()
+            row = pandas.DataFrame(row)
+            print(row)
+            cursor.close()
+        except (Exception, psycopg2.DatabaseError) as error :
+            print ("Error ", error)
+
 
 def execute_role (username, role, password):
     i = 'y'
@@ -266,13 +366,13 @@ def execute_role (username, role, password):
         while i == 'y':
             option = input('''Please enter: \n 
             (a) to view employees \n 
-            (b) to update model information \n 
-            (c) to update inventory information \n
-            (d) to exit \n''')
+            (b) to update model information through prompts \n 
+            (c) to update inventory information through prompts \n
+            (d) to quit \n''')
 #           engineerView
             query = '-1'
             if option == 'a':
-                query = input('Please enter your view of employees query in SQL (from engineerView): \n')
+                query = 'select * from engineerView'
 
             elif option == 'b':
 #           update model information                    
@@ -282,10 +382,12 @@ def execute_role (username, role, password):
             elif option == 'c':
                 query = input('Please enter your update of inventory information in SQL \n')
 
-#           exit
+#           update through prompt
             elif option == 'd':
+                prompt_for_inventory_update(connection)
                 i = -1
-            else:
+            elif option == 'e':
+                i = -1
                 print('Invalid selection.')
             if query != '-1':
 #   Run query
@@ -408,7 +510,7 @@ def execute_role (username, role, password):
         while i == 'y':
             query = '-1'
             option = input('''Please enter: \n
-            (a) to view customer information \n
+            (a) to view all customer information \n
             (b) to view a specific customer's information \n
             (c) to update customer information \n
             (d) to insert a row into orders \n
