@@ -1,0 +1,1 @@
+'update inventory set categorytype = "small" where inventoryid = 102;'
