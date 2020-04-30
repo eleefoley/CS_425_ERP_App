@@ -7,6 +7,3 @@ left join model
 	on orders.modelnumber = model.modelnumber
 left join inventory 
 	on model.inventoryid = inventory.inventoryid;
-	
-drop table employeelogin;
-drop table login;

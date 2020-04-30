@@ -12,4 +12,4 @@ group by
 employee.FirstName, 
 employee.LastName, 
 customer.FirstName, 
-customer.LastName; 
+customer.LastName;

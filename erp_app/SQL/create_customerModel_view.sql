@@ -1,5 +1,5 @@
 --Customer model bought and quantity to make prediction and understand trending
-create or replace view customerModel as 
+create view customerModel as 
 (select
 	ord.customerID,
 	cust.FirstName,
@@ -15,4 +15,3 @@ group by
 	cust.LastName,
 	ord.modelNumber)
 ;
-
