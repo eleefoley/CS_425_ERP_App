@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS orders (	
-	orderNumber int PRIMARY KEY,
+	orderNumber int PRIMARY key NOT NULL CHECK (orderNumber >= 0),
 	customerID int REFERENCES customer
 	on delete cascade on update cascade,
 	employeeID int REFERENCES employee

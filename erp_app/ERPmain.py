@@ -5,17 +5,13 @@ import pandas
 import psycopg2
 from psycopg2 import Error
 
-#for making data visualizations for the reports
-import plotnine
 
-#my-local connection info
-un = "postgres"
-pw = "B2good#1"
-db = "erp"
 
 def main():
 
+
     try:
+        un,pw,db = ask_for_connection_info()
         connection = psycopg2.connect(user = un,
                                       password = pw,
                                       host = "127.0.0.1",
@@ -49,11 +45,27 @@ def main():
                 cursor.close()
                 connection.close()
                 print("PostgreSQL connection is closed")
+    print("""Thanks for accessing and interacting with Database ERP for
+    Illinois Tech project for CS 425, Database Organization, taught by Ola Tannous.
+    This project was completed by Emma Foley and Nicholas Elson""")
 
-
-
-
-
+def ask_for_connection_info():
+    option = input("""Would you like to provide connection information for a local posgres database or use what is included in the origincal project: 
+                   (a) local info
+                   (b) info from the original project""")
+    done = False
+    while(done==False):
+        if(option =='a'):
+            db = input("Please type in the name of the database: ")
+            un = input("Please type in the username, with correct casing: ")
+            pw = input("Please type in the password, with correct casing: ")
+            done = True
+        elif(option =='b'):
+            un = "postgres"
+            pw = "B2good#1"
+            db = "erp"
+            done = True
+    return un,pw,db
 
 
 
@@ -197,23 +209,25 @@ def grant_user_roles(username,role,password):
                 $do$
                 BEGIN
                 
-                        grant select on engineerView to engineer;
-                        grant update on model to engineer;
-                        grant update on inventory to engineer;
-                        grant select on inventory to engineer;
+                    
+                    
+                    grant select on engineerView to engineer;
+                    grant update,select on model to engineer;
+                    grant update,select on inventory to engineer;
               
                 END
                 $do$;"""
+
+
     if role == 'admin':
         query = """DO
         $do$
         BEGIN
-                
-                grant select on expenseReport to admin;
-                grant select on customerModel to admin;
-                grant all privileges on database erp to admin;
-                grant all privileges on all tables in schema public to admin;
-                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO admin;
+            grant all privileges on database erp to admin;
+            grant all privileges on all tables in schema public to admin;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO admin;
+            grant select on expenseReport to admin;
+            grant select on customerModel to admin;
               
         END
         $do$;"""
@@ -222,8 +236,9 @@ def grant_user_roles(username,role,password):
                 $do$
                 BEGIN
                 
-                    grant update on employee to hr;
+                    grant update,select on employee to hr;
                     grant select on hrView to hr;
+                    grant select on orders to hr;
               
                 END
                 $do$;"""
@@ -233,8 +248,8 @@ def grant_user_roles(username,role,password):
                 BEGIN
                 
                     GRANT select on salview TO sales;
-                    GRANT UPDATE ON customer to sales;
-                    grant insert on orders to sales;
+                    GRANT update,select ON customer to sales;
+                    grant insert, select on orders to sales;
               
                 END
                 $do$;"""
@@ -305,6 +320,8 @@ def update_logout(username):
     finally:   
         if(connection):
             connection.close()
+
+
 
 def prompt_for_inventory_update(connection):
     done = False
@@ -669,10 +686,10 @@ def execute_role (username, role, password):
             query = '-1'
             option = input('''Please enter: \n
             (a) to enter a SQL query \n
-            (b) to access admin report #1 \n
-            (c) to access admin report #2 \n
-            (d) to access admin report #3 \n
-            (e) to access admint report #4 \n
+            (b) to access admin report #1: Total revenue from sales, associated employee and customer \n
+            (c) to access admin report #2: Customer model bought and quantity to make prediction and understand trending \n
+            (d) to access admin report #3: For each order, the associated parts and available inventory\n
+            (e) to access admint report #4: Expense report, employee showing salary, bonus expense and part cost \n
             (f) to exit \n''')
 
         #   Any SQL query
@@ -680,9 +697,13 @@ def execute_role (username, role, password):
                 query = input('Please enter your SQL query: \n')
                 try: 
                     cursor.execute(str(query))
+                    connection.commit()
+                    ex = cursor.fetchall()
+                    ex = pandas.DataFrame(ex)
+                    print(ex)
                 except(Exception, psycopg2.DatabaseError) as error :
-                    print('Error: ' +error+ ',...')
-                query = -1
+                    print('Error: ' + str(error) + ',...')
+                query = '-1'
                 
 
             # admin report #1

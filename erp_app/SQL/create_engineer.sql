@@ -7,12 +7,13 @@ BEGIN
       WHERE  rolname = 'engineer') THEN
 		
 		create role engineer;
-		create view engineerView as 
-		select firstName, lastName, department
-		from employee;
-		grant select on engineerView to engineer;
-		grant update on model to engineer;
-		grant update on inventory to engineer;
-   END IF;
+    END IF;
+        create or replace view engineerView as 
+        select firstName, lastName, department
+        from employee;
+        grant select on engineerView to engineer;
+        grant update,select on model to engineer;
+        grant update,select on inventory to engineer;
+   
 END
 $do$;
